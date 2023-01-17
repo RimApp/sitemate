@@ -7,6 +7,7 @@ import {SearchBarBaseProps} from 'react-native-elements/dist/searchbar/SearchBar
 export const Home = () => {
   const [articles, setArticles] = useState();
   const [searchText, setSearchText] = useState('');
+  const [error, setError] = useState();
 
   useEffect(() => {
     const fetchArticles = () => {
@@ -19,10 +20,12 @@ export const Home = () => {
             'Content-Type': 'application/json',
           },
         },
-      ).then(async result => {
-        const response = await result.text();
-        setArticles(JSON.parse(response).articles);
-      });
+      )
+        .then(async result => {
+          const response = await result.text();
+          setArticles(JSON.parse(response).articles);
+        })
+        .catch(e => setError(e));
     };
     fetchArticles();
   }, [searchText]);
@@ -36,22 +39,29 @@ export const Home = () => {
         onChangeText={text => setSearchText(text)}
         value={searchText}
       />
-      <FlatList
-        data={articles}
-        renderItem={({item}) => (
-          <View style={styles.item}>
-            {item.urlToImage && (
-              <Image
-                source={{
-                  uri: item.urlToImage,
-                }}
-                style={styles.image}
-              />
-            )}
-            <Text style={styles.title}>{item.title}</Text>
-          </View>
-        )}
-      />
+      {error ? (
+        <Text style={styles.error}>
+          {'An error has occurred with the API. Please try again\n'}
+          {`Error detail: ${error}`}
+        </Text>
+      ) : (
+        <FlatList
+          data={articles}
+          renderItem={({item}) => (
+            <View style={styles.item}>
+              {item.urlToImage && (
+                <Image
+                  source={{
+                    uri: item.urlToImage,
+                  }}
+                  style={styles.image}
+                />
+              )}
+              <Text style={styles.title}>{item.title}</Text>
+            </View>
+          )}
+        />
+      )}
     </>
   );
 };
@@ -69,5 +79,8 @@ const styles = StyleSheet.create({
   image: {
     flex: 1,
     height: 100,
+  },
+  error: {
+    color: 'red',
   },
 });
